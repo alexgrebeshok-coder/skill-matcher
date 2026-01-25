@@ -23,12 +23,24 @@
 
 ## 📦 Установка
 
+### Вариант 1: Через Claude Code Plugin Marketplace (рекомендуется)
+
+```bash
+# Добавить маркетплейс
+claude plugin marketplace add alexgrebeshok-coder/skill-matcher
+
+# Установить плагин
+claude plugin install skill-matcher@skill-matcher-marketplace
+```
+
+### Вариант 2: Ручное клонирование
+
 ```bash
 # Клонировать репозиторий
 git clone https://github.com/alexgrebeshok-coder/skill-matcher.git
 
-# Скопировать в папку скиллов Claude Code
-cp -r skill-matcher ~/.claude/plugins/marketplaces/anthropic-agent-skills/skills/
+# Скопировать скилл в папку Claude Code
+cp -r skill-matcher/skills/skill-matcher ~/.claude/plugins/marketplaces/anthropic-agent-skills/skills/
 ```
 
 ---
@@ -98,16 +110,22 @@ Claude: 🔧 Подходящий скилл не найден
 
 ---
 
-## 📁 Структура
+## 📁 Структура репозитория
 
 ```
 skill-matcher/
-├── SKILL.md                    # Основные инструкции скилла
-├── references/
-│   ├── skill-catalog.md        # Полный каталог известных скиллов
-│   └── external-sources.md     # Внешние источники для поиска
-└── scripts/
-    └── scan_skills.py          # Скрипт сканирования локальных скиллов
+├── .claude-plugin/
+│   └── marketplace.json        # Конфигурация маркетплейса плагинов
+├── skills/
+│   └── skill-matcher/          # Папка скилла
+│       ├── SKILL.md            # Основные инструкции
+│       ├── references/
+│       │   ├── skill-catalog.md
+│       │   └── external-sources.md
+│       └── scripts/
+│           └── scan_skills.py
+├── README.md
+└── LICENSE
 ```
 
 ---

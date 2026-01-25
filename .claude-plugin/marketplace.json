@@ -1,0 +1,22 @@
+{
+  "name": "skill-matcher-marketplace",
+  "owner": {
+    "name": "alexgrebeshok-coder",
+    "email": "alexgrebeshok@github.com"
+  },
+  "metadata": {
+    "description": "Intelligent skill recommendation and auto-activation system for Claude Code",
+    "version": "1.0.0"
+  },
+  "plugins": [
+    {
+      "name": "skill-matcher",
+      "description": "Automatically analyzes user prompts and recommends the most relevant skills. Auto-activates at session start, searches external catalogs, and proposes creating new skills when needed.",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./skills/skill-matcher"
+      ]
+    }
+  ]
+}

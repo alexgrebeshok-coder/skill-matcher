@@ -1,73 +1,145 @@
-# Skill Matcher
+# 🎯 Skill Matcher
 
-Intelligent skill recommendation and auto-activation system for Claude Code.
+**Интеллектуальная система подбора и автоматической активации скиллов для Claude Code**
 
-## What it does
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Claude Code](https://img.shields.io/badge/Claude%20Code-Compatible-blue)](https://claude.ai)
 
-- **Analyzes your prompts** and automatically recommends the most relevant skills
-- **Auto-activates at session start** to suggest skills based on your first message
-- **Searches external catalogs** (GitHub, MCP Registry) if no local skill matches
-- **Proposes creating new skills** when no existing skill fits your task
+---
 
-## Installation
+## 🚀 Что это?
 
-### Option 1: Clone and copy manually
+**Skill Matcher** — это скилл для Claude Code, который автоматически анализирует ваши запросы и подбирает наиболее подходящие скиллы из установленной библиотеки.
+
+### Ключевые возможности:
+
+- 🔍 **Автоматический анализ** — понимает тип вашей задачи по первому сообщению
+- 💡 **Умные рекомендации** — предлагает релевантные скиллы с объяснением почему они подходят
+- 🔄 **Автозапуск** — активируется при старте каждой сессии
+- 🌐 **Поиск в каталогах** — ищет в GitHub и MCP Registry если локально нет подходящего скилла
+- 🛠 **Создание новых скиллов** — предлагает создать кастомный скилл если ничего не найдено
+
+---
+
+## 📦 Установка
+
 ```bash
+# Клонировать репозиторий
 git clone https://github.com/alexgrebeshok-coder/skill-matcher.git
+
+# Скопировать в папку скиллов Claude Code
 cp -r skill-matcher ~/.claude/plugins/marketplaces/anthropic-agent-skills/skills/
 ```
 
-### Option 2: Add as Claude Code plugin marketplace
-```bash
-claude plugin marketplace add alexgrebeshok-coder/skill-matcher
-```
+---
 
-## Auto-activation Setup
+## ⚙️ Настройка автозапуска
 
-To enable automatic skill recommendations at every session start, add to `~/.claude/CLAUDE.md`:
+Чтобы skill-matcher автоматически активировался при каждой сессии, добавьте в `~/.claude/CLAUDE.md`:
 
 ```markdown
 # Auto Skill Matching
 
-При начале каждой сессии автоматически активируй skill-matcher для анализа первого сообщения пользователя.
+При начале каждой сессии автоматически анализируй первое сообщение пользователя
+и рекомендуй подходящие скиллы.
 
-## Доступные скиллы по категориям
-
-**Документы:** pdf, docx, pptx, xlsx
-**Разработка:** mcp-builder, web-artifacts-builder, webapp-testing
-**Дизайн:** algorithmic-art, canvas-design, frontend-design, theme-factory
-**Коммуникации:** brand-guidelines, internal-comms, slack-gif-creator
-**Мета:** skill-creator
+Формат рекомендации:
+💡 Для этой задачи подходит скилл **[name]**. Активирую его.
 ```
 
-## Usage Examples
+---
 
-| Your prompt | Recommended skill |
-|-------------|-------------------|
-| "Create a presentation" | pptx |
-| "Build an MCP server" | mcp-builder |
-| "Fill out PDF form" | pdf |
-| "Design a UI mockup" | frontend-design |
-| "What skills are available?" | Shows full catalog |
+## 📋 Поддерживаемые категории
 
-## Structure
+| Категория | Скиллы | Примеры запросов |
+|-----------|--------|------------------|
+| **Документы** | `pdf`, `docx`, `pptx`, `xlsx` | "Создай презентацию", "Заполни PDF форму" |
+| **Разработка** | `mcp-builder`, `web-artifacts-builder`, `webapp-testing` | "Сделай MCP сервер", "Протестируй приложение" |
+| **Дизайн** | `algorithmic-art`, `canvas-design`, `frontend-design`, `theme-factory` | "Сгенерируй арт", "Создай UI" |
+| **Коммуникации** | `brand-guidelines`, `internal-comms`, `slack-gif-creator` | "Напиши объявление", "Сделай гифку" |
+| **Мета** | `skill-creator` | "Создай новый скилл" |
+
+---
+
+## 🎬 Примеры использования
+
+### Пример 1: Задача с существующим скиллом
+```
+Вы: Создай презентацию о нашем продукте
+
+Claude: 💡 Для этой задачи подходит скилл **pptx**. Активирую его.
+        [Начинает создание презентации с помощью pptx скилла]
+```
+
+### Пример 2: Запрос списка скиллов
+```
+Вы: Какие скиллы есть?
+
+Claude: 📋 Доступные скиллы:
+
+        **Документы:** pdf, docx, pptx, xlsx
+        **Разработка:** mcp-builder, web-artifacts-builder
+        **Дизайн:** algorithmic-art, frontend-design, theme-factory
+        ...
+```
+
+### Пример 3: Задача без подходящего скилла
+```
+Вы: Помоги настроить мониторинг Kubernetes
+
+Claude: 🔧 Подходящий скилл не найден
+
+        Для этой задачи нет готового скилла. Варианты:
+        1. Создать новый скилл с помощью skill-creator
+        2. Выполнить задачу без скилла
+
+        Что предпочитаешь?
+```
+
+---
+
+## 📁 Структура
 
 ```
 skill-matcher/
-├── SKILL.md                    # Main skill instructions
+├── SKILL.md                    # Основные инструкции скилла
 ├── references/
-│   ├── skill-catalog.md        # Full catalog of known skills
-│   └── external-sources.md     # External sources for finding new skills
+│   ├── skill-catalog.md        # Полный каталог известных скиллов
+│   └── external-sources.md     # Внешние источники для поиска
 └── scripts/
-    └── scan_skills.py          # Script to scan local installed skills
+    └── scan_skills.py          # Скрипт сканирования локальных скиллов
 ```
 
-## When No Skill Matches
+---
 
-If your task doesn't match any existing skill, skill-matcher will:
-1. Search external catalogs for potentially useful skills
-2. Offer to create a new custom skill using `skill-creator`
+## 🔧 Утилиты
 
-## License
+### Сканирование локальных скиллов
 
-MIT
+```bash
+python scripts/scan_skills.py --format table
+```
+
+Выводит список всех установленных скиллов с описаниями.
+
+---
+
+## 🤝 Совместимость
+
+- **Claude Code** — полная поддержка
+- **Anthropic Skills** — совместим с официальной библиотекой скиллов
+- **MCP Servers** — интеграция с Model Context Protocol
+
+---
+
+## 📄 Лицензия
+
+MIT License — используйте свободно!
+
+---
+
+## 👤 Автор
+
+Создано с помощью Claude Code
+
+**GitHub:** [@alexgrebeshok-coder](https://github.com/alexgrebeshok-coder)

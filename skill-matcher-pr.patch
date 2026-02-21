@@ -1,0 +1,861 @@
+From 22f5cf39f4a1ee7e51e72589ff7b429ea11d7264 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Sat, 21 Feb 2026 09:15:43 +0000
+Subject: [PATCH] Add skill-matcher: intelligent skill recommendation and
+ auto-activation
+
+Adds a new meta-skill that automatically analyzes user prompts and recommends
+the most relevant skills from installed plugins and external catalogs.
+
+Key features:
+- Automatic intent analysis from user messages
+- Keyword-based skill matching across 6 categories (Documents, Development,
+  Design, Communication, Testing, Meta)
+- Smart filtering to avoid recommendations for trivial tasks
+- External catalog search when no local skill matches
+- Skill creation suggestions for repetitive workflows
+
+The skill includes:
+- Category mapping with bilingual keywords (EN/RU)
+- Full skill catalog reference
+- External source integration guide
+- Utility script for scanning local skills
+
+This complements the existing skill-creator by helping users discover when
+and how to use skills, and identifying gaps where new skills should be created.
+---
+ .claude-plugin/marketplace.json               |   1 +
+ skills/skill-matcher/LICENSE.txt              | 202 ++++++++++++++++++
+ skills/skill-matcher/SKILL.md                 | 126 +++++++++++
+ .../references/external-sources.md            | 133 ++++++++++++
+ .../skill-matcher/references/skill-catalog.md | 173 +++++++++++++++
+ skills/skill-matcher/scripts/scan_skills.py   | 142 ++++++++++++
+ 6 files changed, 777 insertions(+)
+ create mode 100644 skills/skill-matcher/LICENSE.txt
+ create mode 100644 skills/skill-matcher/SKILL.md
+ create mode 100644 skills/skill-matcher/references/external-sources.md
+ create mode 100644 skills/skill-matcher/references/skill-catalog.md
+ create mode 100755 skills/skill-matcher/scripts/scan_skills.py
+
+diff --git a/.claude-plugin/marketplace.json b/.claude-plugin/marketplace.json
+index 1538e00..c3d16f9 100644
+--- a/.claude-plugin/marketplace.json
++++ b/.claude-plugin/marketplace.json
+@@ -35,6 +35,7 @@
+         "./skills/internal-comms",
+         "./skills/mcp-builder",
+         "./skills/skill-creator",
++        "./skills/skill-matcher",
+         "./skills/slack-gif-creator",
+         "./skills/theme-factory",
+         "./skills/web-artifacts-builder",
+diff --git a/skills/skill-matcher/LICENSE.txt b/skills/skill-matcher/LICENSE.txt
+new file mode 100644
+index 0000000..7a4a3ea
+--- /dev/null
++++ b/skills/skill-matcher/LICENSE.txt
+@@ -0,0 +1,202 @@
++
++                                 Apache License
++                           Version 2.0, January 2004
++                        http://www.apache.org/licenses/
++
++   TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION
++
++   1. Definitions.
++
++      "License" shall mean the terms and conditions for use, reproduction,
++      and distribution as defined by Sections 1 through 9 of this document.
++
++      "Licensor" shall mean the copyright owner or entity authorized by
++      the copyright owner that is granting the License.
++
++      "Legal Entity" shall mean the union of the acting entity and all
++      other entities that control, are controlled by, or are under common
++      control with that entity. For the purposes of this definition,
++      "control" means (i) the power, direct or indirect, to cause the
++      direction or management of such entity, whether by contract or
++      otherwise, or (ii) ownership of fifty percent (50%) or more of the
++      outstanding shares, or (iii) beneficial ownership of such entity.
++
++      "You" (or "Your") shall mean an individual or Legal Entity
++      exercising permissions granted by this License.
++
++      "Source" form shall mean the preferred form for making modifications,
++      including but not limited to software source code, documentation
++      source, and configuration files.
++
++      "Object" form shall mean any form resulting from mechanical
++      transformation or translation of a Source form, including but
++      not limited to compiled object code, generated documentation,
++      and conversions to other media types.
++
++      "Work" shall mean the work of authorship, whether in Source or
++      Object form, made available under the License, as indicated by a
++      copyright notice that is included in or attached to the work
++      (an example is provided in the Appendix below).
++
++      "Derivative Works" shall mean any work, whether in Source or Object
++      form, that is based on (or derived from) the Work and for which the
++      editorial revisions, annotations, elaborations, or other modifications
++      represent, as a whole, an original work of authorship. For the purposes
++      of this License, Derivative Works shall not include works that remain
++      separable from, or merely link (or bind by name) to the interfaces of,
++      the Work and Derivative Works thereof.
++
++      "Contribution" shall mean any work of authorship, including
++      the original version of the Work and any modifications or additions
++      to that Work or Derivative Works thereof, that is intentionally
++      submitted to Licensor for inclusion in the Work by the copyright owner
++      or by an individual or Legal Entity authorized to submit on behalf of
++      the copyright owner. For the purposes of this definition, "submitted"
++      means any form of electronic, verbal, or written communication sent
++      to the Licensor or its representatives, including but not limited to
++      communication on electronic mailing lists, source code control systems,
++      and issue tracking systems that are managed by, or on behalf of, the
++      Licensor for the purpose of discussing and improving the Work, but
++      excluding communication that is conspicuously marked or otherwise
++      designated in writing by the copyright owner as "Not a Contribution."
++
++      "Contributor" shall mean Licensor and any individual or Legal Entity
++      on behalf of whom a Contribution has been received by Licensor and
++      subsequently incorporated within the Work.
++
++   2. Grant of Copyright License. Subject to the terms and conditions of
++      this License, each Contributor hereby grants to You a perpetual,
++      worldwide, non-exclusive, no-charge, royalty-free, irrevocable
++      copyright license to reproduce, prepare Derivative Works of,
++      publicly display, publicly perform, sublicense, and distribute the
++      Work and such Derivative Works in Source or Object form.
++
++   3. Grant of Patent License. Subject to the terms and conditions of
++      this License, each Contributor hereby grants to You a perpetual,
++      worldwide, non-exclusive, no-charge, royalty-free, irrevocable
++      (except as stated in this section) patent license to make, have made,
++      use, offer to sell, sell, import, and otherwise transfer the Work,
++      where such license applies only to those patent claims licensable
++      by such Contributor that are necessarily infringed by their
++      Contribution(s) alone or by combination of their Contribution(s)
++      with the Work to which such Contribution(s) was submitted. If You
++      institute patent litigation against any entity (including a
++      cross-claim or counterclaim in a lawsuit) alleging that the Work
++      or a Contribution incorporated within the Work constitutes direct
++      or contributory patent infringement, then any patent licenses
++      granted to You under this License for that Work shall terminate
++      as of the date such litigation is filed.
++
++   4. Redistribution. You may reproduce and distribute copies of the
++      Work or Derivative Works thereof in any medium, with or without
++      modifications, and in Source or Object form, provided that You
++      meet the following conditions:
++
++      (a) You must give any other recipients of the Work or
++          Derivative Works a copy of this License; and
++
++      (b) You must cause any modified files to carry prominent notices
++          stating that You changed the files; and
++
++      (c) You must retain, in the Source form of any Derivative Works
++          that You distribute, all copyright, patent, trademark, and
++          attribution notices from the Source form of the Work,
++          excluding those notices that do not pertain to any part of
++          the Derivative Works; and
++
++      (d) If the Work includes a "NOTICE" text file as part of its
++          distribution, then any Derivative Works that You distribute must
++          include a readable copy of the attribution notices contained
++          within such NOTICE file, excluding those notices that do not
++          pertain to any part of the Derivative Works, in at least one
++          of the following places: within a NOTICE text file distributed
++          as part of the Derivative Works; within the Source form or
++          documentation, if provided along with the Derivative Works; or,
++          within a display generated by the Derivative Works, if and
++          wherever such third-party notices normally appear. The contents
++          of the NOTICE file are for informational purposes only and
++          do not modify the License. You may add Your own attribution
++          notices within Derivative Works that You distribute, alongside
++          or as an addendum to the NOTICE text from the Work, provided
++          that such additional attribution notices cannot be construed
++          as modifying the License.
++
++      You may add Your own copyright statement to Your modifications and
++      may provide additional or different license terms and conditions
++      for use, reproduction, or distribution of Your modifications, or
++      for any such Derivative Works as a whole, provided Your use,
++      reproduction, and distribution of the Work otherwise complies with
++      the conditions stated in this License.
++
++   5. Submission of Contributions. Unless You explicitly state otherwise,
++      any Contribution intentionally submitted for inclusion in the Work
++      by You to the Licensor shall be under the terms and conditions of
++      this License, without any additional terms or conditions.
++      Notwithstanding the above, nothing herein shall supersede or modify
++      the terms of any separate license agreement you may have executed
++      with Licensor regarding such Contributions.
++
++   6. Trademarks. This License does not grant permission to use the trade
++      names, trademarks, service marks, or product names of the Licensor,
++      except as required for reasonable and customary use in describing the
++      origin of the Work and reproducing the content of the NOTICE file.
++
++   7. Disclaimer of Warranty. Unless required by applicable law or
++      agreed to in writing, Licensor provides the Work (and each
++      Contributor provides its Contributions) on an "AS IS" BASIS,
++      WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
++      implied, including, without limitation, any warranties or conditions
++      of TITLE, NON-INFRINGEMENT, MERCHANTABILITY, or FITNESS FOR A
++      PARTICULAR PURPOSE. You are solely responsible for determining the
++      appropriateness of using or redistributing the Work and assume any
++      risks associated with Your exercise of permissions under this License.
++
++   8. Limitation of Liability. In no event and under no legal theory,
++      whether in tort (including negligence), contract, or otherwise,
++      unless required by applicable law (such as deliberate and grossly
++      negligent acts) or agreed to in writing, shall any Contributor be
++      liable to You for damages, including any direct, indirect, special,
++      incidental, or consequential damages of any character arising as a
++      result of this License or out of the use or inability to use the
++      Work (including but not limited to damages for loss of goodwill,
++      work stoppage, computer failure or malfunction, or any and all
++      other commercial damages or losses), even if such Contributor
++      has been advised of the possibility of such damages.
++
++   9. Accepting Warranty or Additional Liability. While redistributing
++      the Work or Derivative Works thereof, You may choose to offer,
++      and charge a fee for, acceptance of support, warranty, indemnity,
++      or other liability obligations and/or rights consistent with this
++      License. However, in accepting such obligations, You may act only
++      on Your own behalf and on Your sole responsibility, not on behalf
++      of any other Contributor, and only if You agree to indemnify,
++      defend, and hold each Contributor harmless for any liability
++      incurred by, or claims asserted against, such Contributor by reason
++      of your accepting any such warranty or additional liability.
++
++   END OF TERMS AND CONDITIONS
++
++   APPENDIX: How to apply the Apache License to your work.
++
++      To apply the Apache License to your work, attach the following
++      boilerplate notice, with the fields enclosed by brackets "[]"
++      replaced with your own identifying information. (Don't include
++      the brackets!)  The text should be enclosed in the appropriate
++      comment syntax for the file format. We also recommend that a
++      file or class name and description of purpose be included on the
++      same "printed page" as the copyright notice for easier
++      identification within third-party archives.
++
++   Copyright [yyyy] [name of copyright owner]
++
++   Licensed under the Apache License, Version 2.0 (the "License");
++   you may not use this file except in compliance with the License.
++   You may obtain a copy of the License at
++
++       http://www.apache.org/licenses/LICENSE-2.0
++
++   Unless required by applicable law or agreed to in writing, software
++   distributed under the License is distributed on an "AS IS" BASIS,
++   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++   See the License for the specific language governing permissions and
++   limitations under the License.
+\ No newline at end of file
+diff --git a/skills/skill-matcher/SKILL.md b/skills/skill-matcher/SKILL.md
+new file mode 100644
+index 0000000..d4c805b
+--- /dev/null
++++ b/skills/skill-matcher/SKILL.md
+@@ -0,0 +1,126 @@
++---
++name: skill-matcher
++description: Intelligent skill recommendation and activation system. Use when: (1) user asks what skills are available, (2) user needs help choosing the right skill for a task, (3) user wants to find and install new skills, (4) analyzing ANY prompt to determine which skills would help, (5) user says "подбери скилл", "какой скилл использовать", "recommend skills". This skill should activate automatically at session start to analyze user intent and suggest relevant skills.
++---
++
++# Skill Matcher
++
++Automatically analyzes user prompts and recommends the most relevant skills from installed plugins and external catalogs.
++
++## Workflow
++
++### Phase 1: Analyze User Intent
++
++Extract from user's message:
++1. **Task type**: document creation, coding, design, communication, testing
++2. **Keywords**: file formats (.pdf, .docx), tools (MCP, webapp), domains (brand, slides)
++3. **Action verbs**: create, edit, analyze, test, build, design
++
++### Phase 2: Match Skills
++
++1. **Scan local skills** using `scripts/scan_skills.py`
++2. **Match by category** (see Category Mapping below)
++3. **Rank by relevance**: exact keyword match > category match > partial match
++4. **Search external catalogs** if no local match (see [external-sources.md](references/external-sources.md))
++
++### Phase 3: Recommend & Activate
++
++Output format:
++```
++📋 **Recommended skills for your task:**
++
++1. **[skill-name]** ⭐ (high relevance)
++   → [why this skill matches your task]
++
++2. **[skill-name]** (medium relevance)
++   → [why this skill might help]
++
++💡 Reply with skill number to activate, or "all" for all recommended.
++```
++
++After user confirms, activate the skill by mentioning it in context.
++
++## Category Mapping
++
++| Category | Keywords | Skills |
++|----------|----------|--------|
++| **Documents** | pdf, docx, word, excel, xlsx, powerpoint, pptx, slides, spreadsheet, document, form, extract, merge, split, fillable, track changes, comments, форма, документ, презентация, таблица, слайды, редактирование, эксель | pdf, docx, pptx, xlsx |
++| **Development** | mcp, server, api, react, webapp, web app, web, artifact, component, integration, protocol, код, сервер, артефакт, компонент | mcp-builder, web-artifacts-builder |
++| **Design** | art, design, canvas, theme, visual, frontend, ui, generative, algorithm, ux, interface, colors, scheme, dark mode, draw, graphics, дизайн, тема, искусство, генеративный, интерфейс, цвета, рисование, графика | algorithmic-art, canvas-design, frontend-design, theme-factory |
++| **Communication** | brand, guidelines, internal, memo, announcement, communication, slack, gif, style, animation, animated, бренд, коммуникация, стиль, объявление, гиф, анимация | brand-guidelines, internal-comms, slack-gif-creator |
++| **Testing** | test, qa, testing, webapp test, тест, тестирование | webapp-testing |
++| **Meta** | skill, create skill, новый скилл | skill-creator |
++
++## Quick Reference
++
++### Document Tasks
++- "Create a presentation" → **pptx**
++- "Edit PDF form" → **pdf**
++- "Write a Word document" → **docx**
++- "Build a spreadsheet" → **xlsx**
++
++### Development Tasks
++- "Build MCP server" → **mcp-builder**
++- "Create web artifact" → **web-artifacts-builder**
++- "Test my webapp" → **webapp-testing**
++
++### Design Tasks
++- "Generate algorithmic art" → **algorithmic-art**
++- "Design a theme" → **theme-factory**
++- "Create UI mockup" → **frontend-design**
++
++### Communication Tasks
++- "Write internal announcement" → **internal-comms**
++- "Apply brand guidelines" → **brand-guidelines**
++- "Create Slack GIF" → **slack-gif-creator**
++
++## Resources
++
++- Full skill catalog: [skill-catalog.md](references/skill-catalog.md)
++- External sources for new skills: [external-sources.md](references/external-sources.md)
++- Scan local skills: `python scripts/scan_skills.py`
++
++## When No Skill Matches
++
++If user's task doesn't match any existing skill:
++
++### Step 1: Search External Catalogs
++Check [external-sources.md](references/external-sources.md) for skills that might help.
++
++### Step 2: Propose Creating New Skill
++If no external skill found, suggest creating a custom skill:
++
++```
++🔧 **Подходящий скилл не найден**
++
++Для этой задачи нет готового скилла. Варианты:
++
++1. **Создать новый скилл** с помощью skill-creator
++   → Скилл будет сохранён и доступен для будущих задач
++
++2. **Выполнить задачу без скилла**
++   → Просто сделаю задачу, но без специализированных инструкций
++
++Что предпочитаешь?
++```
++
++### When to Suggest skill-creator
++- Task is repetitive (user will do it again)
++- Task requires specific workflow/steps
++- Task involves specialized domain knowledge
++- User explicitly wants to automate similar tasks
++
++### When NOT to Suggest skill-creator
++- One-time simple task
++- Task is too generic
++- User just wants quick answer
++
++## Auto-Activation Rules
++
++This skill activates automatically when:
++1. Session starts (analyze first user message)
++2. User explicitly asks about skills
++3. User's task doesn't have an obvious approach
++4. Keywords from Category Mapping are detected
++
++When activated silently (at session start), provide brief recommendation only if highly relevant skills exist. Don't interrupt if user's task is straightforward.
+diff --git a/skills/skill-matcher/references/external-sources.md b/skills/skill-matcher/references/external-sources.md
+new file mode 100644
+index 0000000..ec555fe
+--- /dev/null
++++ b/skills/skill-matcher/references/external-sources.md
+@@ -0,0 +1,133 @@
++# External Skill Sources
++
++Reference for finding and installing skills from external catalogs when local skills don't match user needs.
++
++## Official Sources
++
++### Anthropic Skills Repository
++**URL**: https://github.com/anthropics/skills
++**Type**: Official skill library from Anthropic
++**How to install**:
++```bash
++# Add marketplace (one-time)
++claude plugin marketplace add anthropics/skills
++
++# Install specific plugin sets
++claude plugin install document-skills@anthropic-agent-skills
++claude plugin install example-skills@anthropic-agent-skills
++```
++
++### Claude Skills via API
++**URL**: https://claude.com/blog/extending-claude-capabilities-with-skills-mcp-servers
++**Type**: Skills available in Claude.ai for paid plans
++**Note**: These are automatically available in Claude.ai web interface
++
++---
++
++## Community Sources
++
++### MCP Servers Directory
++**URL**: https://mcpservers.org
++**Type**: Community-maintained MCP server catalog
++**Search**: Browse by category or search by functionality
++
++### MCP Market
++**URL**: https://mcpmarket.com
++**Type**: MCP tools and skills marketplace
++**Features**: Skill workflows, tutorials, examples
++
++### Awesome MCP Servers
++**URL**: https://github.com/punkpeye/awesome-mcp-servers
++**Type**: Curated list of MCP servers
++**Categories**: AI tools, development, productivity
++
++---
++
++## Installation Commands
++
++### Add a marketplace
++```bash
++claude plugin marketplace add <owner>/<repo>
++```
++
++### List available plugins from marketplace
++```bash
++claude plugin marketplace list
++```
++
++### Install a plugin
++```bash
++claude plugin install <plugin-name>@<marketplace-name>
++```
++
++### List installed plugins
++```bash
++claude plugin list
++```
++
++### Remove a plugin
++```bash
++claude plugin uninstall <plugin-name>
++```
++
++---
++
++## Search Strategy
++
++When local skills don't match user needs:
++
++1. **Search official repo first**
++   - Check https://github.com/anthropics/skills/tree/main/skills
++   - Look for matching skill names or descriptions
++
++2. **Search MCP directories**
++   - Use https://mcpservers.org search
++   - Check category pages relevant to user's task
++
++3. **Web search for specific needs**
++   - Query: "claude code skill [task] site:github.com"
++   - Query: "mcp server [functionality]"
++
++4. **Suggest creating custom skill**
++   - If no existing skill matches, recommend using skill-creator
++   - Help user design a custom skill for their workflow
++
++---
++
++## Skill Quality Indicators
++
++When recommending external skills, consider:
++
++| Indicator | Good Sign | Warning Sign |
++|-----------|-----------|--------------|
++| Stars | 100+ stars | < 10 stars |
++| Updates | Recent commits | No updates > 6 months |
++| Documentation | Clear SKILL.md | Missing docs |
++| Source | anthropics/ org | Unknown author |
++| License | Apache 2.0, MIT | No license |
++
++---
++
++## Common External Skills by Category
++
++### Data & Analytics
++- BigQuery skills
++- Database connectors
++- Data visualization
++
++### Cloud & DevOps
++- AWS deployment
++- Docker management
++- CI/CD workflows
++
++### Productivity
++- Calendar integration
++- Note-taking
++- Task management
++
++### Communication
++- Email drafting
++- Social media
++- Translation
++
++For specific needs not covered by installed skills, search external sources and recommend installation.
+diff --git a/skills/skill-matcher/references/skill-catalog.md b/skills/skill-matcher/references/skill-catalog.md
+new file mode 100644
+index 0000000..e7af733
+--- /dev/null
++++ b/skills/skill-matcher/references/skill-catalog.md
+@@ -0,0 +1,173 @@
++# Skill Catalog
++
++Complete reference of available skills organized by category.
++
++## Document Skills
++
++### pdf
++**Purpose**: PDF manipulation - extract text/tables, create PDFs, merge/split, handle forms
++**Keywords**: pdf, form, extract, merge, split, fillable, document, форма
++**Triggers**:
++- "Fill out this PDF form"
++- "Extract text from PDF"
++- "Merge these PDFs"
++- "Создай PDF" / "Заполни форму"
++
++### docx
++**Purpose**: Word document creation, editing, tracked changes, comments
++**Keywords**: docx, word, document, track changes, comments, редактирование
++**Triggers**:
++- "Create a Word document"
++- "Edit this docx file"
++- "Add tracked changes"
++- "Создай документ Word"
++
++### pptx
++**Purpose**: PowerPoint presentation creation and editing
++**Keywords**: pptx, powerpoint, presentation, slides, презентация, слайды
++**Triggers**:
++- "Create a presentation"
++- "Make slides about..."
++- "Сделай презентацию"
++
++### xlsx
++**Purpose**: Excel spreadsheet creation and manipulation
++**Keywords**: xlsx, excel, spreadsheet, таблица, эксель
++**Triggers**:
++- "Create a spreadsheet"
++- "Build an Excel file"
++- "Сделай таблицу"
++
++---
++
++## Development Skills
++
++### mcp-builder
++**Purpose**: Create MCP (Model Context Protocol) servers
++**Keywords**: mcp, server, protocol, api, integration, код, сервер
++**Triggers**:
++- "Build an MCP server"
++- "Create MCP integration"
++- "Сделай MCP сервер"
++
++### web-artifacts-builder
++**Purpose**: Build complex web artifacts with React, state management, shadcn/ui
++**Keywords**: artifact, webapp, react, component, web, артефакт, компонент
++**Triggers**:
++- "Create a web artifact"
++- "Build interactive component"
++- "Создай веб-артефакт"
++
++---
++
++## Testing Skills
++
++### webapp-testing
++**Purpose**: Test web applications, QA workflows
++**Keywords**: test, testing, qa, webapp, тест, тестирование
++**Triggers**:
++- "Test this webapp"
++- "Run QA checks"
++- "Протестируй приложение"
++
++---
++
++## Design Skills
++
++### algorithmic-art
++**Purpose**: Generate algorithmic/generative art
++**Keywords**: art, generative, algorithm, visual, искусство, генеративный
++**Triggers**:
++- "Generate algorithmic art"
++- "Create generative visuals"
++- "Сделай генеративное искусство"
++
++### canvas-design
++**Purpose**: Design on HTML canvas
++**Keywords**: canvas, draw, graphics, рисование, графика
++**Triggers**:
++- "Draw on canvas"
++- "Create canvas graphics"
++
++### frontend-design
++**Purpose**: Frontend UI/UX design
++**Keywords**: frontend, ui, ux, design, interface, интерфейс, дизайн
++**Triggers**:
++- "Design a UI"
++- "Create frontend mockup"
++- "Сделай дизайн интерфейса"
++
++### theme-factory
++**Purpose**: Create themes and color schemes
++**Keywords**: theme, colors, scheme, dark mode, тема, цвета
++**Triggers**:
++- "Create a theme"
++- "Design color scheme"
++- "Сделай тему оформления"
++
++---
++
++## Communication Skills
++
++### brand-guidelines
++**Purpose**: Apply brand colors, style guidelines, visual standards
++**Keywords**: brand, guidelines, style, visual, бренд, стиль
++**Triggers**:
++- "Apply brand guidelines"
++- "Use company colors"
++- "Примени брендбук"
++
++### internal-comms
++**Purpose**: Write internal communications, memos, announcements
++**Keywords**: internal, memo, announcement, communication, объявление, коммуникация
++**Triggers**:
++- "Write internal announcement"
++- "Create company memo"
++- "Напиши внутреннее объявление"
++
++### slack-gif-creator
++**Purpose**: Create animated GIFs optimized for Slack
++**Keywords**: gif, slack, animation, animated, гиф, анимация
++**Triggers**:
++- "Create Slack GIF"
++- "Make animated GIF"
++- "Сделай гифку для Slack"
++
++---
++
++## Meta Skills
++
++### skill-creator
++**Purpose**: Create new custom skills
++**Keywords**: skill, create, custom, новый скилл
++**Triggers**:
++- "Create a new skill"
++- "Build custom skill"
++- "Создай новый скилл"
++
++### skill-matcher (this skill)
++**Purpose**: Recommend and activate appropriate skills
++**Keywords**: recommend, match, find skill, подбери скилл
++**Triggers**:
++- "What skills are available?"
++- "Which skill should I use?"
++- "Какой скилл использовать?"
++
++---
++
++## Skill Selection Matrix
++
++| User Intent | Primary Skill | Secondary Options |
++|-------------|---------------|-------------------|
++| Create document | docx | pdf (if form needed) |
++| Create presentation | pptx | - |
++| Work with data | xlsx | - |
++| Fill PDF form | pdf | - |
++| Build server | mcp-builder | - |
++| Create UI component | web-artifacts-builder | frontend-design |
++| Test application | webapp-testing | - |
++| Generate art | algorithmic-art | canvas-design |
++| Apply branding | brand-guidelines | theme-factory |
++| Write announcement | internal-comms | - |
++| Make GIF | slack-gif-creator | - |
++| Create new skill | skill-creator | - |
+diff --git a/skills/skill-matcher/scripts/scan_skills.py b/skills/skill-matcher/scripts/scan_skills.py
+new file mode 100755
+index 0000000..0901e5d
+--- /dev/null
++++ b/skills/skill-matcher/scripts/scan_skills.py
+@@ -0,0 +1,142 @@
++#!/usr/bin/env python3
++"""
++Scan local Claude Code skills and output their metadata as JSON.
++
++Usage:
++    python scan_skills.py [--path PATH] [--format FORMAT]
++
++Options:
++    --path PATH      Custom plugins path (default: ~/.claude/plugins)
++    --format FORMAT  Output format: json, table, or brief (default: json)
++"""
++
++import os
++import json
++import re
++import argparse
++from pathlib import Path
++from typing import Dict, List, Optional
++
++
++def parse_skill_md(file_path: Path) -> Optional[Dict]:
++    """Parse SKILL.md file and extract metadata."""
++    try:
++        content = file_path.read_text(encoding='utf-8')
++    except Exception as e:
++        return None
++
++    # Extract YAML frontmatter
++    frontmatter_match = re.match(r'^---\s*\n(.*?)\n---', content, re.DOTALL)
++    if not frontmatter_match:
++        return None
++
++    frontmatter = frontmatter_match.group(1)
++
++    # Parse name and description from frontmatter
++    name_match = re.search(r'^name:\s*(.+)$', frontmatter, re.MULTILINE)
++    desc_match = re.search(r'^description:\s*(.+?)(?=\n[a-z]+:|$)', frontmatter, re.MULTILINE | re.DOTALL)
++
++    if not name_match:
++        return None
++
++    name = name_match.group(1).strip().strip('"\'')
++    description = desc_match.group(1).strip().strip('"\'') if desc_match else ""
++
++    # Clean up multiline descriptions
++    description = ' '.join(description.split())
++
++    return {
++        'name': name,
++        'description': description,
++        'path': str(file_path.parent),
++        'file': str(file_path)
++    }
++
++
++def scan_skills_directory(base_path: Path) -> List[Dict]:
++    """Scan directory for SKILL.md files and collect metadata."""
++    skills = []
++
++    # Search patterns for skill locations
++    search_patterns = [
++        "**/SKILL.md",
++    ]
++
++    skill_files = set()
++    for pattern in search_patterns:
++        skill_files.update(base_path.glob(pattern))
++
++    for skill_file in sorted(skill_files):
++        metadata = parse_skill_md(skill_file)
++        if metadata:
++            skills.append(metadata)
++
++    return skills
++
++
++def get_default_plugins_path() -> Path:
++    """Get default Claude plugins path."""
++    home = Path.home()
++    return home / ".claude" / "plugins"
++
++
++def format_output(skills: List[Dict], format_type: str) -> str:
++    """Format skills output based on requested format."""
++    if format_type == "json":
++        return json.dumps(skills, indent=2, ensure_ascii=False)
++
++    elif format_type == "table":
++        if not skills:
++            return "No skills found."
++
++        lines = []
++        lines.append(f"{'Name':<25} {'Description':<60}")
++        lines.append("-" * 85)
++
++        for skill in skills:
++            name = skill['name'][:24]
++            desc = skill['description'][:59] if skill['description'] else "(no description)"
++            lines.append(f"{name:<25} {desc:<60}")
++
++        return "\n".join(lines)
++
++    elif format_type == "brief":
++        if not skills:
++            return "No skills found."
++
++        return "\n".join(f"- {s['name']}: {s['description'][:80]}..."
++                        if len(s['description']) > 80
++                        else f"- {s['name']}: {s['description']}"
++                        for s in skills)
++
++    return json.dumps(skills, indent=2, ensure_ascii=False)
++
++
++def main():
++    parser = argparse.ArgumentParser(description="Scan Claude Code skills")
++    parser.add_argument("--path", type=str, help="Custom plugins path")
++    parser.add_argument("--format", type=str, default="json",
++                        choices=["json", "table", "brief"],
++                        help="Output format")
++
++    args = parser.parse_args()
++
++    plugins_path = Path(args.path) if args.path else get_default_plugins_path()
++
++    if not plugins_path.exists():
++        print(json.dumps({"error": f"Path not found: {plugins_path}"}, indent=2))
++        return 1
++
++    skills = scan_skills_directory(plugins_path)
++
++    # Sort by name
++    skills.sort(key=lambda x: x['name'].lower())
++
++    output = format_output(skills, args.format)
++    print(output)
++
++    return 0
++
++
++if __name__ == "__main__":
++    exit(main())
+-- 
+2.43.0
+

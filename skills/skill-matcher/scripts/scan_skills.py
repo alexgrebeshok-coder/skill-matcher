@@ -59,12 +59,12 @@ def scan_skills_directory(base_path: Path) -> List[Dict]:
 
     # Search patterns for skill locations
     search_patterns = [
-        base_path / "**" / "SKILL.md",
+        "**/SKILL.md",
     ]
 
     skill_files = set()
     for pattern in search_patterns:
-        skill_files.update(base_path.glob("**/SKILL.md"))
+        skill_files.update(base_path.glob(pattern))
 
     for skill_file in sorted(skill_files):
         metadata = parse_skill_md(skill_file)

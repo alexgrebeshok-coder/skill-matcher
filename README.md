@@ -169,7 +169,7 @@ skill-matcher/
 ### Сканирование локальных скиллов
 
 ```bash
-python scripts/scan_skills.py --format table
+python skills/skill-matcher/scripts/scan_skills.py --format table
 ```
 
 Выводит список всех установленных скиллов с описаниями.

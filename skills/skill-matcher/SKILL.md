@@ -44,10 +44,10 @@ After user confirms, activate the skill by mentioning it in context.
 
 | Category | Keywords | Skills |
 |----------|----------|--------|
-| **Documents** | pdf, docx, word, excel, xlsx, powerpoint, pptx, slides, spreadsheet, document, форма, документ, презентация, таблица | pdf, docx, pptx, xlsx |
-| **Development** | mcp, server, api, react, webapp, web app, artifact, component, код, сервер | mcp-builder, web-artifacts-builder |
-| **Design** | art, design, canvas, theme, visual, frontend, ui, дизайн, тема, искусство | algorithmic-art, canvas-design, frontend-design, theme-factory |
-| **Communication** | brand, guidelines, internal, memo, announcement, slack, gif, бренд, коммуникация | brand-guidelines, internal-comms, slack-gif-creator |
+| **Documents** | pdf, docx, word, excel, xlsx, powerpoint, pptx, slides, spreadsheet, document, form, extract, merge, split, fillable, track changes, comments, форма, документ, презентация, таблица, слайды, редактирование, эксель | pdf, docx, pptx, xlsx |
+| **Development** | mcp, server, api, react, webapp, web app, web, artifact, component, integration, protocol, код, сервер, артефакт, компонент | mcp-builder, web-artifacts-builder |
+| **Design** | art, design, canvas, theme, visual, frontend, ui, generative, algorithm, ux, interface, colors, scheme, dark mode, draw, graphics, дизайн, тема, искусство, генеративный, интерфейс, цвета, рисование, графика | algorithmic-art, canvas-design, frontend-design, theme-factory |
+| **Communication** | brand, guidelines, internal, memo, announcement, communication, slack, gif, style, animation, animated, бренд, коммуникация, стиль, объявление, гиф, анимация | brand-guidelines, internal-comms, slack-gif-creator |
 | **Testing** | test, qa, testing, webapp test, тест, тестирование | webapp-testing |
 | **Meta** | skill, create skill, новый скилл | skill-creator |
 

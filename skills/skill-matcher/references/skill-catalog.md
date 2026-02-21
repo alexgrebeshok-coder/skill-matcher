@@ -6,7 +6,7 @@ Complete reference of available skills organized by category.
 
 ### pdf
 **Purpose**: PDF manipulation - extract text/tables, create PDFs, merge/split, handle forms
-**Keywords**: pdf, form, extract, merge, split, fillable, document
+**Keywords**: pdf, form, extract, merge, split, fillable, document, форма
 **Triggers**:
 - "Fill out this PDF form"
 - "Extract text from PDF"
@@ -44,7 +44,7 @@ Complete reference of available skills organized by category.
 
 ### mcp-builder
 **Purpose**: Create MCP (Model Context Protocol) servers
-**Keywords**: mcp, server, protocol, api, integration, сервер
+**Keywords**: mcp, server, protocol, api, integration, код, сервер
 **Triggers**:
 - "Build an MCP server"
 - "Create MCP integration"

@@ -58,6 +58,10 @@ Complete reference of available skills organized by category.
 - "Build interactive component"
 - "Создай веб-артефакт"
 
+---
+
+## Testing Skills
+
 ### webapp-testing
 **Purpose**: Test web applications, QA workflows
 **Keywords**: test, testing, qa, webapp, тест, тестирование

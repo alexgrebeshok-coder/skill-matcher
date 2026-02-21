@@ -45,10 +45,10 @@ After user confirms, activate the skill by mentioning it in context.
 | Category | Keywords | Skills |
 |----------|----------|--------|
 | **Documents** | pdf, docx, word, excel, xlsx, powerpoint, pptx, slides, spreadsheet, document, форма, документ, презентация, таблица | pdf, docx, pptx, xlsx |
-| **Development** | mcp, server, api, webapp, web app, artifact, component, код, сервер | mcp-builder, web-artifacts-builder |
+| **Development** | mcp, server, api, react, webapp, web app, artifact, component, код, сервер | mcp-builder, web-artifacts-builder |
 | **Design** | art, design, canvas, theme, visual, frontend, ui, дизайн, тема, искусство | algorithmic-art, canvas-design, frontend-design, theme-factory |
 | **Communication** | brand, guidelines, internal, memo, announcement, slack, gif, бренд, коммуникация | brand-guidelines, internal-comms, slack-gif-creator |
-| **Testing** | test, qa, testing, webapp test, тест | webapp-testing |
+| **Testing** | test, qa, testing, webapp test, тест, тестирование | webapp-testing |
 | **Meta** | skill, create skill, новый скилл | skill-creator |
 
 ## Quick Reference

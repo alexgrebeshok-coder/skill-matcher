@@ -76,7 +76,8 @@ skill-creator — он будет доступен для будущих зад�
 | Категория | Скиллы | Примеры запросов |
 |-----------|--------|------------------|
 | **Документы** | `pdf`, `docx`, `pptx`, `xlsx` | "Создай презентацию", "Заполни PDF форму" |
-| **Разработка** | `mcp-builder`, `web-artifacts-builder`, `webapp-testing` | "Сделай MCP сервер", "Протестируй приложение" |
+| **Разработка** | `mcp-builder`, `web-artifacts-builder` | "Сделай MCP сервер", "Создай веб-артефакт" |
+| **Тестирование** | `webapp-testing` | "Протестируй приложение", "Запусти QA" |
 | **Дизайн** | `algorithmic-art`, `canvas-design`, `frontend-design`, `theme-factory` | "Сгенерируй арт", "Создай UI" |
 | **Коммуникации** | `brand-guidelines`, `internal-comms`, `slack-gif-creator` | "Напиши объявление", "Сделай гифку" |
 | **Мета** | `skill-creator` | "Создай новый скилл" |
@@ -101,6 +102,7 @@ Claude: 📋 Доступные скиллы:
 
         **Документы:** pdf, docx, pptx, xlsx
         **Разработка:** mcp-builder, web-artifacts-builder
+        **Тестирование:** webapp-testing
         **Дизайн:** algorithmic-art, frontend-design, theme-factory
         ...
 ```
